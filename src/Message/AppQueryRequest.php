@@ -22,25 +22,19 @@ class AppQueryRequest extends AbstractAppRequest
     public function getData()
     {
         $this->validate(
-            'app_key',
-            'order_no'
+            'app_id',
+            'rsa_private_key',
+            'sign_type',
+            'alipay_rsa_public_key',
+            'out_trade_no'
         );
 
         $data = array(
-            //app_id
-            'app'              => $this->getApp(),
-            //支付方式
-            'channel'          => $this->getChannel(),
-            //callback地址
-            'callback'         => $this->getCallback(),
-            //app_key
-            'app_key'          => $this->getAppKey(),
-            //货币
-            'currency'         => $this->getCurrency(),
-            //私钥地址
-            'private_key_path' => $this->getPrivateKeyPath(),
-            //交易id
-            'order_no'         => $this->getOrderNo()
+            "app_id"                => $this->getAppId(),
+            "rsa_private_key"       => $this->getRsaPrivateKey(),
+            "sign_type"             => $this->getSignType(),
+            "alipay_rsa_public_key" => $this->getAlipayRsaPublicKey(),
+            "out_trade_no"          => $this->getOutTradeNo(),
         );
 
         return $data;
@@ -56,52 +50,36 @@ class AppQueryRequest extends AbstractAppRequest
     public function sendData($data)
     {
 
-        \Alipay\Alipay::setApiKey($data['app_key']);           // 设置 API Key
-        \Alipay\Alipay::setPrivateKeyPath($data['private_key_path']);   // 设置私钥
+        $aop                     = new \AopClient ();
+        $aop->gatewayUrl         = $this->getEndpoint();
+        $aop->appId              = $data['app_id'];
+        $aop->rsaPrivateKey      = $data['rsa_private_key'];
+        $aop->alipayrsaPublicKey = $data['alipay_rsa_public_key'];
+        $aop->apiVersion         = '1.0';
+        $aop->signType           = $data['sign_type'];
+        $aop->postCharset        = 'UTF-8';
+        $aop->format             = 'json';
+        $request                 = new \AlipayTradeQueryRequest ();
 
-        // 查询支付成功列表
-        $ch = \Alipay\App::all(array(
-            'limit'    => 10,
-            'app'      => array('id' => $data['app']),
-            'channel'  => $data['channel'],
-            'paid'     => true,
-            'refunded' => false,
-            'reversed' => false
-        ));
+        $biz_content = array(
+            "out_trade_no"    => $data['out_trade_no'],
+        );
 
-        $data['is_paid'] = false;
+        $biz_content = json_encode($biz_content);
 
-        foreach ($ch->data as $App) {
-            if ($App['order_no'] == $data['order_no'] && $App['paid'] && ! $App['refunded'] && ! $App['reversed']) {
-                $data['is_paid'] = true;
+        $request->setBizContent($biz_content);
 
-                $data['id']              = $App->id;
-                $data["object"]          = $App->object;
-                $data["created"]         = $App->created;
-                $data["livemode"]        = $App->livemode;
-                $data["paid"]            = $App->paid;
-                $data["refunded"]        = $App->refunded;
-                $data["reversed"]        = $App->reversed;
-                $data["app"]             = $App->app;
-                $data["channel"]         = $App->channel;
-                $data["client_ip"]       = $App->client_ip;
-                $data["amount"]          = $App->amount;
-                $data["amount_settle"]   = $App->amount_settle;
-                $data["currency"]        = $App->currency;
-                $data["subject"]         = $App->subject;
-                $data["body"]            = $App->body;
-                $data["time_paid"]       = $App->time_paid;
-                $data["time_expire"]     = $App->time_expire;
-                $data["time_settle"]     = $App->time_settle;
-                $data["amount_refunded"] = $App->amount_refunded;
-                $data["failure_code"]    = $App->failure_code;
-                $data["failure_msg"]     = $App->failure_msg;
-                $data["description"]     = $App->description;
+        $result = $aop->execute($request);
 
-                break;
-            }
+        $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
+        $resultCode   = $result->$responseNode->code;
+
+        if (! empty($resultCode) && $resultCode == 10000) {
+            $data['is_paid'] = true;
+        } else {
+            $data['is_paid'] = false;
         }
 
-        return $data;// 输出 Ping++ 返回 App 对象
+        return array_merge($data, (array) $result->$responseNode);
     }
 }

@@ -7,6 +7,7 @@ use Omnipay\Alipay\Helper;
 
 /**
  * Class AppRefundRequest
+ *
  * @package Omnipay\Alipay\Message
  */
 class AppRefundRequest extends AbstractAppRequest
@@ -21,35 +22,25 @@ class AppRefundRequest extends AbstractAppRequest
     public function getData()
     {
         $this->validate(
-            'amount',
-            'subject',
-            'app_key',
-            'ch_id'
+            'app_id',
+            'rsa_private_key',
+            'sign_type',
+            'alipay_rsa_public_key',
+            'out_trade_no',
+            'refund_amount',
+            'out_request_no',
+            'trade_no'
         );
 
-        $data = array (
-            //商户订单号
-            'order_no'        => $this->getOrderNo(),
-            //交易金额，单位分
-            'amount'         => $this->getAmount(),
-            //主题
-            'subject' => $this->getSubject(),
-            //内容
-            'body' => $this->getBody(),
-            //app_id
-            'app' => $this->getApp(),
-            //支付方式
-            'channel' => $this->getChannel(),
-            //callback地址
-            'callback' => $this->getCallback(),
-            //app_key
-            'app_key' => $this->getAppKey(),
-            //货币
-            'currency' => $this->getCurrency(),
-            //私钥地址
-            'private_key_path' => $this->getPrivateKeyPath(),
-            //交易id
-            'ch_id' => $this->getChId()
+        $data = array(
+            "app_id"                => $this->getAppId(),
+            "rsa_private_key"       => $this->getRsaPrivateKey(),
+            "sign_type"             => $this->getSignType(),
+            "alipay_rsa_public_key" => $this->getAlipayRsaPublicKey(),
+            "out_trade_no"          => $this->getOutTradeNo(),
+            "refund_amount"         => $this->getRefundAmount(),
+            "out_request_no"        => $this->getOutRequestNo(),
+            'trade_no'              => $this->getTradeNo(),
         );
 
         return $data;
@@ -60,26 +51,42 @@ class AppRefundRequest extends AbstractAppRequest
      * Send the request with specified data
      *
      * @param  mixed $data The data to send
-     *
      * @return ResponseInterface
      */
     public function sendData($data)
     {
-//        require dirname(__FILE__) . '/../../../../pingplusplus/Alipay-php/init.php';
+        $aop                     = new \AopClient ();
+        $aop->gatewayUrl         = $this->getEndpoint();
+        $aop->appId              = $data['app_id'];
+        $aop->rsaPrivateKey      = $data['rsa_private_key'];
+        $aop->alipayrsaPublicKey = $data['alipay_rsa_public_key'];
+        $aop->apiVersion         = '1.0';
+        $aop->signType           = $data['sign_type'];
+        $aop->postCharset        = 'UTF-8';
+        $aop->format             = 'json';
+        $request                 = new \AlipayTradeRefundRequest ();
 
-        \Alipay\Alipay::setApiKey($data['app_key']);           // 设置 API Key
-        \Alipay\Alipay::setPrivateKeyPath($data['private_key_path']);   // 设置私钥
-
-        // 通过发起一次退款请求创建一个新的 refund 对象，只能对已经发生交易并且没有全额退款的 App 对象发起退款
-        $ch = \Alipay\App::retrieve($data['ch_id']);// App 对象的 id
-
-        $re = $ch->refunds->create(
-            array(
-                'amount' => $data['amount'],// 退款的金额, 单位为对应币种的最小货币单位，例如：人民币为分（如退款金额为 1 元，此处请填 100）。必须小于等于可退款金额，默认为全额退款
-                'description' => $data['subject']
-            )
+        $biz_content = array(
+            "out_trade_no"   => $data['out_trade_no'],
+            "trade_no"       => $data['trade_no'],
+            "refund_amount"  => $data['refund_amount'],
+            "out_request_no" => $data['out_request_no'],
         );
 
-        return $this->response = new AppRefundResponse($this, json_decode($re));
+        $biz_content = json_encode($biz_content);
+
+        $request->setBizContent($biz_content);
+        $result = $aop->execute($request);
+
+        $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
+        $resultCode   = $result->$responseNode->code;
+
+        if (! empty($resultCode) && $resultCode == 10000) {
+            $data['is_paid'] = true;
+        } else {
+            $data['is_paid'] = false;
+        }
+
+        return $this->response = new AppRefundResponse($this, array_merge($data, (array)$result->$responseNode));
     }
 }

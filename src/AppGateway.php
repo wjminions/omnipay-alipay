@@ -46,12 +46,12 @@ class AppGateway extends AbstractGateway
 
     public function setAlipayRsaPublicKey($value)
     {
-        return $this->setParameter('rsa_alipay_public_key', $value);
+        return $this->setParameter('alipay_rsa_public_key', $value);
     }
 
     public function getAlipayRsaPublicKey()
     {
-        return $this->getParameter('rsa_alipay_public_key');
+        return $this->getParameter('alipay_rsa_public_key');
     }
 
 
@@ -140,6 +140,39 @@ class AppGateway extends AbstractGateway
     public function getTimeoutExpress()
     {
         return $this->getParameter('timeout_express');
+    }
+
+
+    public function setRefundAmount($value)
+    {
+        return $this->setParameter('refund_amount', $value);
+    }
+
+    public function getRefundAmount()
+    {
+        return $this->getParameter('refund_amount');
+    }
+
+
+    public function setOutRequestNo($value)
+    {
+        return $this->setParameter('out_request_no', $value);
+    }
+
+    public function getOutRequestNo()
+    {
+        return $this->getParameter('out_request_no');
+    }
+
+
+    public function setTradeNo($value)
+    {
+        return $this->setParameter('trade_no', $value);
+    }
+
+    public function getTradeNo()
+    {
+        return $this->getParameter('trade_no');
     }
 
 

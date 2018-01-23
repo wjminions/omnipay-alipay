@@ -10,6 +10,11 @@ use Omnipay\Common\Message\AbstractResponse;
  */
 class AppCompletePurchaseResponse extends AbstractResponse
 {
+    public function isPaid()
+    {
+        return $this->data['is_paid'];
+    }
+
 
     /**
      * Is the response successful?
@@ -18,14 +23,6 @@ class AppCompletePurchaseResponse extends AbstractResponse
      */
     public function isSuccessful()
     {
-        return $this->isPaid();
-    }
-
-
-    public function isPaid()
-    {
-        $data = $this->getData();
-
-        return $data['paid'];
+        return $this->data['is_paid'];
     }
 }
