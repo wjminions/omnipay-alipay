@@ -43,7 +43,7 @@ class AppCompletePurchaseRequest extends AbstractAppRequest
         $flag = $aop->rsaCheckV1($_POST, NULL, $this->getSignType());
 
         $data['is_paid'] = false;
-        if ($flag) {
+        if ($flag && $data['code'] == 10000 && $data['trade_status'] == 'TRADE_SUCCESS') {
             // 验证通过
             $data['is_paid'] = true;
 

@@ -73,8 +73,9 @@ class AppQueryRequest extends AbstractAppRequest
 
         $responseNode = str_replace(".", "_", $request->getApiMethodName()) . "_response";
         $resultCode   = $result->$responseNode->code;
+        $trade_status   = $result->$responseNode->trade_status;
 
-        if (! empty($resultCode) && $resultCode == 10000) {
+        if (! empty($resultCode) && $resultCode == 10000 && $trade_status == 'TRADE_SUCCESS') {
             $data['is_paid'] = true;
         } else {
             $data['is_paid'] = false;
