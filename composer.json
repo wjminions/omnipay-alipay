@@ -1,0 +1,35 @@
+{
+  "name": "wjminions/omnipay-alipay",
+  "type": "library",
+  "description": "Alipay gateway for Omnipay payment processing library",
+  "keywords": [
+    "alipay",
+    "gateway",
+    "cross-border",
+    "international",
+    "merchant",
+    "omnipay",
+    "pay",
+    "payment",
+    "purchase"
+  ],
+  "homepage": "https://github.com/wjminions/omnipay-alipay",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "wjminions",
+        "homepage": "https://github.com/wjminions/omnipay-alipay"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Omnipay\\Alipay\\": "src/"
+    }
+  },
+  "require": {
+    "omnipay/common": "~2.5.1"
+  },
+  "require-dev": {
+    "omnipay/tests": "~2.0"
+  }
+}
