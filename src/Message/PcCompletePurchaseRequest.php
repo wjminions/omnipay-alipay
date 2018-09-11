@@ -40,7 +40,16 @@ class PcCompletePurchaseRequest extends AbstractAppRequest
     {
         $aop = new \AopClient;
         $aop->alipayrsaPublicKey = $this->getAlipayRsaPublicKey();
-        $flag = $aop->rsaCheckV1($_POST, NULL, $this->getSignType());
+
+        $sign_type = $this->getSignType();
+
+        if ($sign_type == 'RSA') {
+            $flag = $aop->rsaCheckV1($_POST, NULL, $this->getSignType());
+        }
+
+        if ($sign_type == 'RSA2') {
+            $flag = $aop->rsaCheckV2($_POST, NULL, $this->getSignType());
+        }
 
         $data['is_paid'] = false;
         if ($flag && $data['trade_status'] == 'TRADE_SUCCESS') {
