@@ -52,12 +52,15 @@ class PcCompletePurchaseRequest extends AbstractAppRequest
         }
 
         $data['is_paid'] = false;
-        if ($flag && $data['trade_status'] == 'TRADE_SUCCESS') {
-            // 验证通过
-            $data['is_paid'] = true;
 
-            http_response_code(200);
-            echo 'success';
+        if (isset($data['trade_status'])) {
+            if ($flag && $data['trade_status'] == 'TRADE_SUCCESS') {
+                // 验证通过
+                $data['is_paid'] = true;
+
+                http_response_code(200);
+                echo 'success';
+            }
         }
 
         return $this->response = new PcCompletePurchaseResponse($this, $data);
